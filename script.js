@@ -54,7 +54,7 @@ const getCountryAndNeighbour = function (country) {
     });
   });
 };
-*/
+
 //getCountryAndNeighbour('Turkey');
 
 const getJSON = function (url, errorMsg = 'Something went wrong') {
@@ -94,14 +94,71 @@ const getCountryData = function (country) {
 btn.addEventListener('click', function () {
   getCountryData('Germany');
 });
-///////////////////
+///////////////////*/
 /* Coding Challenge #1*/
 
-const whereAmI = function (lat, lng) {
-  const coords = [lat, lng];
-  fetch(
-    `https://geocode.xyz/${lat},${lng}?geoit=json&auth=949716826320982866157x93746`
-  )
+/*
+whereAmI(52.508, 13.381);
+
+/////////// Example for working logic
+console.log('Test start');
+setTimeout(() => console.log('0 sec timer'), 0);
+
+Promise.resolve('Resolved Promise').then(res => console.log(res));
+console.log('test End');
+
+////////
+
+const lotteryPromise = new Promise(function (resolve, reject) {
+  console.log('Lotter draw is happening ...');
+  setTimeout(function () {
+    if (Math.random() >= 0.5) {
+      resolve('You Win!');
+    } else {
+      reject('You lost your money');
+    }
+  }, 2000);
+});
+
+lotteryPromise.then(res => console.log(res));
+
+// Promisifying setTimeout
+
+const wait = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+wait(1)
+  .then(res => {
+    console.log(`1 second`);
+    return wait(1);
+  })
+  .then(() => {
+    console.log(`2 second`);
+    return wait(1);
+  })
+  .then(() => {
+    console.log(`3 second`);
+    return wait(1);
+  });
+/////*/
+
+const getPosition = function () {
+  return new Promise((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  );
+};
+
+const whereAmI = function () {
+  getPosition()
+    .then(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      return fetch(
+        `https://geocode.xyz/${lat},${lng}?geoit=json&auth=949716826320982866157x93746`
+      );
+    })
     .then(response => {
       if (!response.ok) throw new Error('Rejected Promise Error 404');
       return response.json();
@@ -123,6 +180,52 @@ const whereAmI = function (lat, lng) {
     .finally(() => (countriesContainer.style.opacity = 1));
 };
 
-whereAmI(52.508, 13.381);
-whereAmI(19.037, 72.873);
-whereAmI(-33.933, 18.474);
+btn.addEventListener('click', whereAmI);
+
+////// Challenge 2
+const images = document.querySelector('.images');
+
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const img = document.createElement('img');
+    img.src = imgPath;
+    img.addEventListener('load', function () {
+      images.appendChild(img);
+      resolve(img);
+    });
+    img.addEventListener('error', function () {
+      reject('Image not found');
+    });
+  });
+};
+const waiting = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+let currentImg;
+
+createImage('img/img-1.jpg')
+  .then(res => {
+    currentImg = res;
+    return waiting(2);
+  })
+  .then(() => {
+    currentImg.style.display = 'none';
+    return createImage('img/img-2.jpg');
+  })
+  .then(res => {
+    currentImg = res;
+    return waiting(2);
+  })
+  .then(() => {
+    currentImg.style.display = 'none';
+    return createImage('img/img-3.jpg');
+  })
+  .then(res => {
+    currentImg = res;
+    return waiting(2);
+  })
+  .then(() => (currentImg.style.display = 'none'))
+  .catch(err => console.error('You have a Error:', err));
