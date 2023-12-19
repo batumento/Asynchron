@@ -25,6 +25,7 @@ const renderCountry = function (data, className = '') {
         </article>
   `;
   countriesContainer.insertAdjacentHTML('beforeend', html);
+  countriesContainer.style.opacity = 1;
 };
 ///////////////////////////////////////
 //Task yourself :
@@ -143,9 +144,8 @@ wait(1)
     console.log(`3 second`);
     return wait(1);
   });
-/////*/
 
-const getPosition = function () {
+  const getPosition = function () {
   return new Promise((resolve, reject) =>
     navigator.geolocation.getCurrentPosition(resolve, reject)
   );
@@ -181,6 +181,7 @@ const whereAmI = function () {
 };
 
 btn.addEventListener('click', whereAmI);
+/////*/
 
 ////// Challenge 2
 const images = document.querySelector('.images');
@@ -229,3 +230,41 @@ createImage('img/img-1.jpg')
   })
   .then(() => (currentImg.style.display = 'none'))
   .catch(err => console.error('You have a Error:', err));
+
+//
+
+const getPosition = function () {
+  return new Promise((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  );
+};
+
+const whereAmI = async function () {
+  try {
+    //Geolocation
+    const geoLocation = await getPosition();
+    const { latitude: lat, longitude: lng } = geoLocation.coords;
+
+    //Reverse geocoding
+    const res = await fetch(
+      `https://geocode.xyz/${lat},${lng}?geoit=json&auth=949716826320982866157x93746`
+    );
+    if (!res.ok) throw new Error(`Problem getting location data: ${res.ok}`);
+    const data = await res.json();
+
+    //Country data
+    const resGeo = await fetch(
+      `https://restcountries.com/v3.1/name/${data.country}`
+    );
+    if (!resGeo.ok)
+      throw new Error(`Problem getting country data: ${resGeo.ok}`);
+    const dataGeo = await resGeo.json();
+    renderCountry(dataGeo[0]);
+  } catch (err) {
+    console.error(`${err}`);
+    renderError(`Something went wrong ${err.message}`);
+  }
+};
+
+whereAmI();
+console.log('First');
