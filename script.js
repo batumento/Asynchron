@@ -184,6 +184,7 @@ btn.addEventListener('click', whereAmI);
 /////*/
 
 ////// Challenge 2
+/*
 const images = document.querySelector('.images');
 
 const createImage = function (imgPath) {
@@ -231,8 +232,8 @@ createImage('img/img-1.jpg')
   .then(() => (currentImg.style.display = 'none'))
   .catch(err => console.error('You have a Error:', err));
 
-//
-
+///////////////////////////*/
+/*
 const getPosition = function () {
   return new Promise((resolve, reject) =>
     navigator.geolocation.getCurrentPosition(resolve, reject)
@@ -260,11 +261,128 @@ const whereAmI = async function () {
       throw new Error(`Problem getting country data: ${resGeo.ok}`);
     const dataGeo = await resGeo.json();
     renderCountry(dataGeo[0]);
+    return `You are in ${data.city}, ${data.country}`;
   } catch (err) {
-    console.error(`${err}`);
+    console.error(`1: ${err}`);
     renderError(`Something went wrong ${err.message}`);
+
+    throw err;
   }
 };
 
-whereAmI();
+//whereAmI()
+//  .then(city => console.log(city))
+//  .catch(err => console.log(`${err} 22`));
 console.log('First');
+
+(async function () {
+  try {
+    const city = await whereAmI();
+    console.log(city);
+  } catch (err) {
+    console.log(`3: ${err.message}`);
+  } finally {
+    console.log('3: Finishedddd');
+  }
+})();
+
+////////////////////////////*/
+
+const getJSON = function (url, errorMsg = 'Something went wrong') {
+  return fetch(url).then(response => {
+    if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+    return response.json();
+  });
+};
+
+const get3Country = async function (c1, c2, c3) {
+  try {
+    //const [data1] = await getJSON(`https://restcountries.com/v3.1/name/${c1}`);
+    //const [data2] = await getJSON(`https://restcountries.com/v3.1/name/${c2}`);
+    //const [data3] = await getJSON(`https://restcountries.com/v3.1/name/${c3}`);
+
+    const data = await Promise.all([
+      getJSON(`https://restcountries.com/v3.1/name/${c1}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c2}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c3}`),
+    ]);
+    console.log(data.map(value => value[0].capital));
+  } catch (err) {
+    console.log(`1: ${err.message}`);
+  }
+};
+
+get3Country('turkey', 'greece', 'bulgaria');
+
+(async function () {
+  const data = await Promise.race([
+    getJSON(`https://restcountries.com/v3.1/name/germany`),
+    getJSON(`https://restcountries.com/v3.1/name/turkey`),
+    getJSON(`https://restcountries.com/v3.1/name/egypt`),
+  ]);
+})();
+
+const timeout = function (sec) {
+  return new Promise(function (_, reject) {
+    setTimeout(function () {
+      reject(new Error('Request took too long!'));
+    }, sec * 1000);
+  });
+};
+//Promise.race([
+//  getJSON(`https://restcountries.com/v3.1/name/germany`),
+//  timeout(5),
+//]).then(res => console.log(res[0]));
+
+///Challenge#3
+const images = document.querySelector('.images');
+
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const img = document.createElement('img');
+    img.src = imgPath;
+    img.addEventListener('load', function () {
+      images.appendChild(img);
+      resolve(img);
+    });
+    img.addEventListener('error', function () {
+      reject('Image not found');
+    });
+  });
+};
+const waiting = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+
+const loadNPause = async function () {
+  try {
+    let img = await createImage('img/img-1.jpg');
+    await waiting(2);
+    img.style.display = 'none';
+
+    img = await createImage('img/img-2.jpg');
+    await waiting(2);
+    img.style.display = 'none';
+
+    img = await createImage('img/img-3.jpg');
+    await waiting(2);
+    img.style.display = 'none';
+  } catch (err) {}
+};
+
+const loadAll = async function (imgArr) {
+  try {
+    const imgs = imgArr.map(async imgPath => await createImage(imgPath));
+
+    const imgsEl = await Promise.all(imgs);
+    imgsEl.forEach(img => img.classList.add('parallel'));
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+//loadNPause('img/img-1.jpg');
+loadAll(['img/img-1.jpg', 'img/img-2.jpg', 'img/img-3.jpg']);
+let currentImg;
